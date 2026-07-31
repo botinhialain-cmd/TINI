@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView
@@ -88,3 +89,35 @@ class CommandeStatutView(APIView):
 
         sortie = CommandeSerializer(commande)
         return Response(sortie.data)
+
+
+class CommandeStatsView(APIView):
+    """
+    Récapitulatif des ventes : quantité et montant total par produit,
+    calculé uniquement sur les commandes marquées 'servie' (les seules
+    ventes réellement finalisées).
+    """
+
+    def get(self, request):
+        lignes = (
+            LigneCommande.objects.filter(commande__statut="servie")
+            .values("produit__nom")
+            .annotate(
+                quantite_totale=Sum("quantite"),
+                montant_total=Sum(F("quantite") * F("prix_unitaire")),
+            )
+            .order_by("-montant_total")
+        )
+
+        produits = [
+            {
+                "nom": ligne["produit__nom"],
+                "quantite": ligne["quantite_totale"],
+                "montant": ligne["montant_total"],
+            }
+            for ligne in lignes
+        ]
+
+        total_general = sum(p["montant"] for p in produits)
+
+        return Response({"produits": produits, "total_general": total_general})
