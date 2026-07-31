@@ -22,7 +22,13 @@ class CommandeCreationView(APIView):
     """
 
     def get(self, request):
-        commandes = Commande.objects.exclude(statut="servie").order_by("-date_creation")[:50]
+        vue = request.query_params.get("vue")
+
+        if vue == "historique":
+            commandes = Commande.objects.all().order_by("-date_creation")[:100]
+        else:
+            commandes = Commande.objects.exclude(statut="servie").order_by("-date_creation")[:50]
+
         sortie = CommandeSerializer(commandes, many=True)
         return Response(sortie.data)
 
