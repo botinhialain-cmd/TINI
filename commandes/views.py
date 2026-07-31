@@ -1,0 +1,84 @@
+import logging
+
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from tables.models import Table
+from produits.models import Produit
+from notifications.services import notifier_nouvelle_commande
+from .models import Commande, LigneCommande
+from .serializers import CommandeSerializer, CommandeCreationSerializer
+
+
+class CommandeCreationView(APIView):
+    """
+    Point d'entrée unique du parcours client : reçoit le panier, crée la
+    commande + ses lignes, puis déclenche la notification WhatsApp.
+    GET : liste des commandes récentes, utilisée par le tableau de bord
+    de la gérante pour suivre les commandes en direct.
+    """
+
+    def get(self, request):
+        commandes = Commande.objects.exclude(statut="servie").order_by("-date_creation")[:50]
+        sortie = CommandeSerializer(commandes, many=True)
+        return Response(sortie.data)
+
+    def post(self, request):
+        entree = CommandeCreationSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        donnees = entree.validated_data
+
+        table = get_object_or_404(Table, code_qr=donnees["table_code_qr"], active=True)
+        commande = Commande.objects.create(table=table)
+
+        for ligne in donnees["lignes"]:
+            produit = get_object_or_404(Produit, id=ligne["produit_id"], disponible=True)
+            LigneCommande.objects.create(
+                commande=commande,
+                produit=produit,
+                quantite=ligne["quantite"],
+                prix_unitaire=produit.prix,
+            )
+
+        # La notif ne doit jamais faire échouer la commande si Twilio a un souci,
+        # mais on garde une trace pour pouvoir déboguer.
+        try:
+            notifier_nouvelle_commande(commande)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                "Échec de la notification WhatsApp pour la commande #%s", commande.id
+            )
+
+        sortie = CommandeSerializer(commande)
+        return Response(sortie.data, status=status.HTTP_201_CREATED)
+
+
+class CommandeDetailView(RetrieveAPIView):
+    """Permet au client de suivre le statut de sa commande."""
+    queryset = Commande.objects.all()
+    serializer_class = CommandeSerializer
+
+
+class CommandeStatutView(APIView):
+    """Permet à la gérante de faire avancer le statut d'une commande depuis le tableau de bord."""
+
+    STATUTS_VALIDES = {"recue", "en_preparation", "servie", "annulee"}
+
+    def patch(self, request, pk):
+        commande = get_object_or_404(Commande, pk=pk)
+        nouveau_statut = request.data.get("statut")
+
+        if nouveau_statut not in self.STATUTS_VALIDES:
+            return Response(
+                {"detail": f"Statut invalide. Valeurs possibles : {sorted(self.STATUTS_VALIDES)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        commande.statut = nouveau_statut
+        commande.save(update_fields=["statut"])
+
+        sortie = CommandeSerializer(commande)
+        return Response(sortie.data)
