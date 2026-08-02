@@ -46,14 +46,22 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'rest_framework.authtoken',
     'tables',
     'produits',
     'commandes',
     'notifications',
+    'comptes',
 ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 
 # --- Notifications WhatsApp (Twilio) ---
 # À définir en variables d'environnement, jamais en dur dans le code.

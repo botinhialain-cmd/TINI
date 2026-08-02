@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/tables/', include('tables.urls')),
     path('api/produits/', include('produits.urls')),
     path('api/commandes/', include('commandes.urls')),
+    path('api/comptes/', include('comptes.urls')),
 ]
 
 if settings.DEBUG:
