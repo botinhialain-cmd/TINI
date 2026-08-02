@@ -104,6 +104,33 @@ class CommandeStatutView(APIView):
         return Response(sortie.data)
 
 
+class CommandePaiementView(APIView):
+    """
+    Permet au personnel connecté de marquer une commande comme payée ou non,
+    indépendamment de son statut de préparation (le client peut payer
+    avant, pendant ou après avoir été servi, ou régler plusieurs
+    commandes d'un coup en fin de visite).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        commande = get_object_or_404(Commande, pk=pk)
+        paye = request.data.get("paye")
+
+        if not isinstance(paye, bool):
+            return Response(
+                {"detail": "Le champ 'paye' doit être un booléen (true/false)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        commande.paye = paye
+        commande.save(update_fields=["paye"])
+
+        sortie = CommandeSerializer(commande)
+        return Response(sortie.data)
+
+
 class CommandeStatsView(APIView):
     """
     Récapitulatif des ventes : quantité et montant total par produit,

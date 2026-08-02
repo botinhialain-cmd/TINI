@@ -26,7 +26,7 @@ class CommandeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Commande
-        fields = ["id", "table", "table_numero", "statut", "date_creation", "lignes", "total", "servi_par_nom"]
+        fields = ["id", "table", "table_numero", "statut", "date_creation", "lignes", "total", "servi_par_nom", "paye"]
         read_only_fields = ["statut", "date_creation"]
 
 

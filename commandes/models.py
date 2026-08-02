@@ -24,6 +24,10 @@ class Commande(models.Model):
         related_name="commandes_servies",
         help_text="Membre du personnel ayant marqué la commande comme servie",
     )
+    paye = models.BooleanField(
+        default=False,
+        help_text="Indépendant du statut de préparation : le client peut payer avant, pendant ou après avoir été servi.",
+    )
 
     class Meta:
         ordering = ["-date_creation"]
