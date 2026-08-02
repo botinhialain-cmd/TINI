@@ -1,4 +1,18 @@
+import os
 from django.db import models
+
+
+def _stockage_photos():
+    """
+    Retourne l'instance de stockage à utiliser pour les photos produits.
+    Résolu directement (plutôt que via le mécanisme global storages['default']
+    de Django) pour éviter un bug de résolution rencontré en production.
+    """
+    if os.environ.get('CLOUDINARY_URL'):
+        from cloudinary_storage.storage import MediaCloudinaryStorage
+        return MediaCloudinaryStorage()
+    from django.core.files.storage import FileSystemStorage
+    return FileSystemStorage()
 
 
 class Produit(models.Model):
@@ -17,7 +31,7 @@ class Produit(models.Model):
     format = models.CharField(max_length=20, blank=True, help_text="Ex: 33cl, 65cl")
     prix = models.PositiveIntegerField(help_text="Prix en FCFA")
     disponible = models.BooleanField(default=True)
-    photo = models.ImageField(upload_to="produits/", blank=True, null=True)
+    photo = models.ImageField(upload_to="produits/", blank=True, null=True, storage=_stockage_photos)
 
     class Meta:
         ordering = ["categorie", "nom"]
