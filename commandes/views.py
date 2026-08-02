@@ -4,12 +4,14 @@ from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tables.models import Table
 from produits.models import Produit
 from notifications.services import notifier_nouvelle_commande
+from comptes.permissions import EstGerant, PeutVoirCommandes
 from .models import Commande, LigneCommande
 from .serializers import CommandeSerializer, CommandeCreationSerializer
 
@@ -19,8 +21,11 @@ class CommandeCreationView(APIView):
     Point d'entrée unique du parcours client : reçoit le panier, crée la
     commande + ses lignes, puis déclenche la notification WhatsApp.
     GET : liste des commandes récentes, utilisée par le tableau de bord
-    de la gérante pour suivre les commandes en direct.
+    du personnel pour suivre les commandes en direct. L'historique
+    (?vue=historique) est réservé au rôle gérant (voir PeutVoirCommandes).
     """
+
+    permission_classes = [PeutVoirCommandes]
 
     def get(self, request):
         vue = request.query_params.get("vue")
@@ -70,7 +75,9 @@ class CommandeDetailView(RetrieveAPIView):
 
 
 class CommandeStatutView(APIView):
-    """Permet à la gérante de faire avancer le statut d'une commande depuis le tableau de bord."""
+    """Permet au personnel connecté de faire avancer le statut d'une commande."""
+
+    permission_classes = [IsAuthenticated]
 
     STATUTS_VALIDES = {"recue", "en_preparation", "servie", "annulee"}
 
@@ -95,8 +102,10 @@ class CommandeStatsView(APIView):
     """
     Récapitulatif des ventes : quantité et montant total par produit,
     calculé uniquement sur les commandes marquées 'servie' (les seules
-    ventes réellement finalisées).
+    ventes réellement finalisées). Réservé au rôle gérant.
     """
+
+    permission_classes = [EstGerant]
 
     def get(self, request):
         lignes = (
