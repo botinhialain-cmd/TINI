@@ -210,8 +210,3 @@ LOGGING = {
         },
     },
 }
-
-# --- DIAGNOSTIC TEMPORAIRE ---
-# À retirer une fois le souci Cloudinary/STORAGES résolu.
-print(f"[DIAGNOSTIC] STORAGES = {STORAGES}", flush=True)
-print(f"[DIAGNOSTIC] CLOUDINARY_URL présente : {bool(os.environ.get('CLOUDINARY_URL'))}", flush=True)
