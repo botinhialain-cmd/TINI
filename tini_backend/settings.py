@@ -43,9 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',
     'django.contrib.staticfiles',
-    'cloudinary',
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -58,14 +56,6 @@ INSTALLED_APPS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-# --- Stockage des photos produits ---
-# En local (dev), les photos restent sur le disque comme avant.
-# En prod, si CLOUDINARY_URL est définie (fournie par Cloudinary lors de la
-# création du compte), les photos uploadées sont stockées de façon permanente
-# sur Cloudinary plutôt que sur le disque éphémère de Render.
-if os.environ.get('CLOUDINARY_URL'):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -179,7 +169,19 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# --- Stockage des fichiers (nouveau format Django "STORAGES") ---
+# "default" = fichiers uploadés (photos produits). En local, reste sur le
+# disque. En prod, si CLOUDINARY_URL est définie, bascule sur Cloudinary
+# pour un stockage permanent (le disque de Render n'est pas persistant).
 STORAGES = {
+    "default": {
+        "BACKEND": (
+            "cloudinary_storage.storage.MediaCloudinaryStorage"
+            if os.environ.get('CLOUDINARY_URL')
+            else "django.core.files.storage.FileSystemStorage"
+        ),
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
