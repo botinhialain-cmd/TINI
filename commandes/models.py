@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from tables.models import Table
 from produits.models import Produit
@@ -15,6 +16,14 @@ class Commande(models.Model):
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default="recue")
     date_creation = models.DateTimeField(auto_now_add=True)
     date_maj = models.DateTimeField(auto_now=True)
+    servi_par = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="commandes_servies",
+        help_text="Membre du personnel ayant marqué la commande comme servie",
+    )
 
     class Meta:
         ordering = ["-date_creation"]

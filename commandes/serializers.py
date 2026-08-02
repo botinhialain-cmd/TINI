@@ -22,10 +22,11 @@ class CommandeSerializer(serializers.ModelSerializer):
     lignes = LigneCommandeLectureSerializer(many=True, read_only=True)
     total = serializers.ReadOnlyField()
     table_numero = serializers.IntegerField(source="table.numero", read_only=True)
+    servi_par_nom = serializers.CharField(source="servi_par.username", read_only=True, default=None)
 
     class Meta:
         model = Commande
-        fields = ["id", "table", "table_numero", "statut", "date_creation", "lignes", "total"]
+        fields = ["id", "table", "table_numero", "statut", "date_creation", "lignes", "total", "servi_par_nom"]
         read_only_fields = ["statut", "date_creation"]
 
 

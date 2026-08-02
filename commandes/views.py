@@ -92,7 +92,13 @@ class CommandeStatutView(APIView):
             )
 
         commande.statut = nouveau_statut
-        commande.save(update_fields=["statut"])
+        champs_modifies = ["statut"]
+
+        if nouveau_statut == "servie":
+            commande.servi_par = request.user
+            champs_modifies.append("servi_par")
+
+        commande.save(update_fields=champs_modifies)
 
         sortie = CommandeSerializer(commande)
         return Response(sortie.data)
