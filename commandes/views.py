@@ -53,6 +53,7 @@ class CommandeCreationView(APIView):
                 produit=produit,
                 quantite=ligne["quantite"],
                 prix_unitaire=produit.prix,
+                cout_unitaire=produit.cout,
             )
 
         # La notif ne doit jamais faire échouer la commande si Twilio a un souci,
@@ -163,3 +164,45 @@ class CommandeStatsView(APIView):
         total_general = sum(p["montant"] for p in produits)
 
         return Response({"produits": produits, "total_general": total_general})
+
+
+class CommandeBeneficeView(APIView):
+    """
+    Récapitulatif des bénéfices : pour chaque produit, quantité vendue,
+    chiffre d'affaires, coût total et bénéfice (marge), calculé sur les
+    commandes marquées 'servie'. Réservé au rôle gérant.
+    """
+
+    permission_classes = [EstGerant]
+
+    def get(self, request):
+        lignes = (
+            LigneCommande.objects.filter(commande__statut="servie")
+            .values("produit__nom")
+            .annotate(
+                quantite_totale=Sum("quantite"),
+                chiffre_affaires=Sum(F("quantite") * F("prix_unitaire")),
+                cout_total=Sum(F("quantite") * F("cout_unitaire")),
+            )
+            .order_by("-chiffre_affaires")
+        )
+
+        produits = []
+        for ligne in lignes:
+            benefice = ligne["chiffre_affaires"] - ligne["cout_total"]
+            produits.append({
+                "nom": ligne["produit__nom"],
+                "quantite": ligne["quantite_totale"],
+                "chiffre_affaires": ligne["chiffre_affaires"],
+                "cout_total": ligne["cout_total"],
+                "benefice": benefice,
+            })
+
+        benefice_general = sum(p["benefice"] for p in produits)
+        chiffre_affaires_general = sum(p["chiffre_affaires"] for p in produits)
+
+        return Response({
+            "produits": produits,
+            "benefice_general": benefice_general,
+            "chiffre_affaires_general": chiffre_affaires_general,
+        })

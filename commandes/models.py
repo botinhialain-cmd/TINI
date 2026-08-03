@@ -46,6 +46,10 @@ class LigneCommande(models.Model):
     produit = models.ForeignKey(Produit, on_delete=models.PROTECT)
     quantite = models.PositiveIntegerField(default=1)
     prix_unitaire = models.PositiveIntegerField(help_text="Prix au moment de la commande (historique)")
+    cout_unitaire = models.PositiveIntegerField(
+        default=0,
+        help_text="Coût d'achat au moment de la commande (historique, pour calcul du bénéfice)",
+    )
 
     def __str__(self):
         return f"{self.quantite} x {self.produit.nom}"
@@ -53,3 +57,7 @@ class LigneCommande(models.Model):
     @property
     def sous_total(self):
         return self.quantite * self.prix_unitaire
+
+    @property
+    def benefice(self):
+        return self.quantite * (self.prix_unitaire - self.cout_unitaire)

@@ -46,7 +46,11 @@ class Produit(models.Model):
     nom = models.CharField(max_length=100)
     categorie = models.ForeignKey(Categorie, on_delete=models.PROTECT, related_name="produits")
     format = models.CharField(max_length=20, blank=True, help_text="Ex: 33cl, 65cl")
-    prix = models.PositiveIntegerField(help_text="Prix en FCFA")
+    prix = models.PositiveIntegerField(help_text="Prix de vente en FCFA")
+    cout = models.PositiveIntegerField(
+        default=0,
+        help_text="Coût d'achat unitaire en FCFA — sert à calculer le bénéfice dans l'onglet 'Bénéfice' du tableau de bord",
+    )
     disponible = models.BooleanField(default=True)
     photo = models.ImageField(upload_to="produits/", blank=True, null=True, storage=_stockage_photos)
 
