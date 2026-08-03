@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Produit
+from .models import Produit, Categorie
+
+
+@admin.register(Categorie)
+class CategorieAdmin(admin.ModelAdmin):
+    list_display = ["nom", "ordre", "actif"]
+    list_editable = ["ordre", "actif"]
+    ordering = ["ordre", "nom"]
 
 
 @admin.register(Produit)

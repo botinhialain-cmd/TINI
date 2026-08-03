@@ -5,5 +5,5 @@ from .serializers import ProduitSerializer
 
 class ProduitListView(ListAPIView):
     """Liste des produits disponibles à la commande (le menu affiché au client)."""
-    queryset = Produit.objects.filter(disponible=True)
+    queryset = Produit.objects.filter(disponible=True, categorie__actif=True)
     serializer_class = ProduitSerializer

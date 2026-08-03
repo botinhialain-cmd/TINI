@@ -9,7 +9,7 @@ Les prix sont indicatifs (voir discussion) — à ajuster ensuite dans l'admin
 selon les vrais tarifs pratiqués.
 """
 from django.core.management.base import BaseCommand
-from produits.models import Produit
+from produits.models import Produit, Categorie
 
 BIERES = [
     {"nom": "Bock", "format": "33cl", "prix": 700},
@@ -25,12 +25,14 @@ class Command(BaseCommand):
     help = "Charge une liste de bières courantes (Côte d'Ivoire) avec prix indicatifs."
 
     def handle(self, *args, **options):
+        categorie_biere, _ = Categorie.objects.get_or_create(nom="Bière", defaults={"ordre": 1})
+
         crees = 0
         for biere in BIERES:
             _, cree = Produit.objects.get_or_create(
                 nom=biere["nom"],
                 format=biere["format"],
-                defaults={"categorie": "biere", "prix": biere["prix"], "disponible": True},
+                defaults={"categorie": categorie_biere, "prix": biere["prix"], "disponible": True},
             )
             if cree:
                 crees += 1
