@@ -17,12 +17,15 @@ def _stockage_photos():
 
 class Produit(models.Model):
     """
-    Un produit vendable (bière pour le MVP).
-    La catégorie est déjà prévue pour accueillir plats/softs plus tard sans tout casser.
+    Un produit vendable (bière, vin, cocktail, etc.).
     """
     CATEGORIE_CHOICES = [
         ("biere", "Bière"),
-        ("soft", "Boisson sans alcool"),
+        ("vin", "Vin"),
+        ("spiritueux", "Spiritueux"),
+        ("cocktail", "Cocktail"),
+        ("energisante", "Boisson énergisante"),
+        ("soft", "Soft / Sans alcool"),
         ("plat", "Plat"),
     ]
 
