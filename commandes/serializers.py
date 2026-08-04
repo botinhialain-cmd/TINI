@@ -9,7 +9,14 @@ class LigneCommandeLectureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LigneCommande
-        fields = ["id", "produit", "quantite", "prix_unitaire", "sous_total"]
+        fields = [
+            "id",
+            "produit",
+            "quantite",
+            "prix_unitaire",
+            "cout_unitaire",
+            "sous_total",
+        ]
 
 
 class LigneCommandeEcritureSerializer(serializers.Serializer):
