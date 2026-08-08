@@ -10,3 +10,4 @@ dj-database-url==3.1.2
 psycopg2-binary==2.9.12
 cloudinary==1.45.0
 django-cloudinary-storage==0.3.0
+requests==2.34.2
